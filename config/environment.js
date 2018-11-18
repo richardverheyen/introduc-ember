@@ -1,10 +1,36 @@
 'use strict';
 
+// Where the Elixir backend is located
+const apiHosts = {
+  development: 'http://localhost:3000',
+  production: 'https://api.introduc.com'
+};
+
+// Where this Ember app is located
+const appHosts = {
+  development: 'http://localhost:4200',
+  production: 'https://interflux.com'
+};
+
+// Where the CDN is located
+const cdnHosts = {
+  development: 'http://localhost:9000',
+  production: 'https://cdn.introduc.com'
+};
+
 module.exports = function(environment) {
   // Environment flags
   const isDevelopment = environment === 'development';
   const isProduction = environment === 'production';
   const isTest = environment === 'test';
+
+  // Hosts
+  const apiHost = apiHosts[environment];
+  const appHost = appHosts[environment];
+  const cdnHost = cdnHosts[environment];
+
+  // The Elexir API namespace (for example 'v1/public')
+  const apiNamespace = 'v1';
 
   let ENV = {
     modulePrefix: 'introduc',
@@ -30,7 +56,11 @@ module.exports = function(environment) {
     buildConfig: {
       isDevelopment,
       isTest,
-      isProduction
+      isProduction,
+      apiHost,
+      appHost,
+      cdnHost,
+      apiNamespace
     }
   };
 
