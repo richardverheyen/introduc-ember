@@ -1,6 +1,11 @@
 'use strict';
 
 module.exports = function(environment) {
+  // Environment flags
+  const isDevelopment = environment === 'development';
+  const isProduction = environment === 'production';
+  const isTest = environment === 'test';
+
   let ENV = {
     modulePrefix: 'introduc',
     environment,
@@ -20,6 +25,12 @@ module.exports = function(environment) {
     APP: {
       // Here you can pass flags/options to your application instance
       // when it is created
+    },
+
+    buildConfig: {
+      isDevelopment,
+      isTest,
+      isProduction
     }
   };
 
