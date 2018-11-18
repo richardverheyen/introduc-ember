@@ -29,7 +29,7 @@ module.exports = function(environment) {
   const appHost = appHosts[environment];
   const cdnHost = cdnHosts[environment];
 
-  // The Elexir API namespace (for example 'v1/public')
+  // The Elixir API namespace (for example 'v1/public')
   const apiNamespace = 'v1';
 
   let ENV = {
