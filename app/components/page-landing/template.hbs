@@ -1,1 +1,11 @@
 <p>landing page</p>
+{{#if createSessionUser.isRunning}}
+  <p>I'm posting the new sessionUser</p>
+{{else}}
+  {{#if user}}
+    <p>Name: {{user.name}}</p>
+    <p>Name: {{user.tagline}}</p>
+  {{else}}
+    <p>No user was created... ¯\_(ツ)_/¯</p>
+  {{/if}}
+{{/if}}
