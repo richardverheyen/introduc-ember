@@ -2,7 +2,7 @@
 
 // Where the Elixir backend is located
 const apiHosts = {
-  development: 'http://localhost:3000',
+  development: 'http://localhost:4000/api',
   production: 'https://api.introduc.com'
 };
 

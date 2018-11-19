@@ -17,7 +17,12 @@ export default Component.extend({
   },
 
   createSessionUser: task(function*() {
-    const user = this.store.createRecord('sessionUser', {});
+    const user = this.store.createRecord('user', {
+      name: 'Richard Verheyen',
+      tagline: 'Ember sent this tagline',
+      lat: 1.1111,
+      lng: 2.222
+    });
     yield user.save();
     this.set('user', user);
     this.startUpdateLocationLoop.perform();
@@ -27,9 +32,10 @@ export default Component.extend({
     const fiveSeconds = 5 * 1000;
     while (true) {
       this.user.setProperties({
-        lat: 'xxx',
-        long: 'yyy'
+        lat: 1.11,
+        long: 2.22
       });
+
       yield this.user.save();
       yield timeout(fiveSeconds);
     }
