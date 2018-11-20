@@ -8,9 +8,11 @@ export default Service.extend({
   router: service(),
   storedUser: null,
   sessionUser: null,
+  lat: null,
+  lng: null,
 
   checkLocalStorageForAccount() {
-    const storedUser = JSON.parse(window.localStorage.getItem('currentUser'));
+    const storedUser = JSON.parse(window.localStorage.getItem('storedUser'));
 
     if (
       !storedUser ||
@@ -29,19 +31,31 @@ export default Service.extend({
   },
 
   postUserToApi: task(function*(storedUser) {
+    if (!this.lat || !this.lng) {
+      console.error(
+        'attempted to post a user but there was no coordinates available'
+      );
+      return;
+    }
+
+    storedUser.lat = this.lat;
+    storedUser.lng = this.lng;
+    console.log('posting user:', storedUser);
+
     const user = this.store.createRecord('user', storedUser);
     yield user.save();
     this.set('sessionUser', user);
-    this.startUpdateLocationLoop.perform();
+    // this.startUpdateLocationLoop.perform();
+    this.router.transitionTo('index');
   }),
 
   startUpdateLocationLoop: task(function*() {
     const fiveSeconds = 5 * 1000;
     while (true) {
-      // console.log('updating location');
+      console.log('updating location');
       this.sessionUser.setProperties({
-        lat: 1.11,
-        long: 2.22
+        lat: this.lat,
+        lng: this.lng
       });
 
       yield this.sessionUser.save();
