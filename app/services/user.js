@@ -5,20 +5,31 @@ import { inject as service } from '@ember/service';
 
 export default Service.extend({
   store: service(),
+  router: service(),
+  storedUser: null,
   sessionUser: null,
 
-  init() {
-    this._super(...arguments);
-    this.createSessionUser.perform();
+  checkLocalStorageForAccount() {
+    const storedUser = JSON.parse(window.localStorage.getItem('currentUser'));
+
+    if (
+      !storedUser ||
+      typeof storedUser.name !== 'string' ||
+      typeof storedUser.tagline !== 'string'
+    ) {
+      this.transitionToWelcomePage();
+    } else {
+      this.set('storedUser', storedUser);
+      this.postUserToApi.perform(storedUser);
+    }
   },
 
-  createSessionUser: task(function*() {
-    const user = this.store.createRecord('user', {
-      name: 'Richard Verheyen',
-      tagline: 'Ember sent this tagline',
-      lat: 1.1111,
-      lng: 2.222
-    });
+  transitionToWelcomePage() {
+    this.router.replaceWith('welcome');
+  },
+
+  postUserToApi: task(function*(storedUser) {
+    const user = this.store.createRecord('user', storedUser);
     yield user.save();
     this.set('sessionUser', user);
     this.startUpdateLocationLoop.perform();
