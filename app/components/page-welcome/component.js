@@ -5,6 +5,7 @@ export default Component.extend({
   tagName: 'main',
   elementId: 'page-welcome',
   user: service(),
+
   name: null,
   tagline: null,
 
@@ -19,23 +20,12 @@ export default Component.extend({
   },
 
   actions: {
-    createAccount() {
-      if ('geolocation' in navigator) {
-        // TODO: This is asynchronous, we need to set a loading state and wait until it's all set up.
-        navigator.geolocation.getCurrentPosition(pos => {
-          this.user.set('lat', pos.coords.latitude);
-          this.user.set('lng', pos.coords.longitude);
-        });
-      } else {
-        alert('geolocation IS NOT available');
-        return;
-      }
-
+    createAccount(name, tagline) {
       window.localStorage.setItem(
         'storedUser',
         JSON.stringify({
-          name: this.name,
-          tagline: this.tagline
+          name: name,
+          tagline: tagline
         })
       );
 

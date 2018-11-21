@@ -6,13 +6,16 @@ import { inject as service } from '@ember/service';
 export default Service.extend({
   store: service(),
   router: service(),
-  storedUser: null,
   sessionUser: null,
+  name: null,
+  tagline: null,
   lat: null,
   lng: null,
 
   checkLocalStorageForAccount() {
     const storedUser = JSON.parse(window.localStorage.getItem('storedUser'));
+    const storedName = storedUser.name;
+    const storedTagline = storedUser.tagline;
 
     if (
       !storedUser ||
@@ -21,8 +24,9 @@ export default Service.extend({
     ) {
       this.transitionToWelcomePage();
     } else {
-      this.set('storedUser', storedUser);
-      this.postUserToApi.perform(storedUser);
+      this.set('name', storedName);
+      this.set('tagline', storedTagline);
+      this.postUserToApi.perform(storedName, storedTagline);
     }
   },
 
@@ -30,23 +34,40 @@ export default Service.extend({
     this.router.replaceWith('welcome');
   },
 
-  postUserToApi: task(function*(storedUser) {
-    if (!this.lat || !this.lng) {
-      console.error(
-        'attempted to post a user but there was no coordinates available'
-      );
-      return;
-    }
+  postUserToApi: task(function*(name, tagline) {
+    const callback = (lat, lng) => {
+      this.saveUser.perform(name, tagline, lat, lng);
+      this.startUpdateLocationLoop.perform();
+      this.router.transitionTo('index');
+    };
 
-    storedUser.lat = this.lat;
-    storedUser.lng = this.lng;
-    console.log('posting user:', storedUser);
+    yield this.fetchCoords.perform(callback);
+  }),
 
-    const user = this.store.createRecord('user', storedUser);
-    yield user.save();
+  fetchCoords: task(function*(callback) {
+    yield navigator.geolocation.getCurrentPosition(pos => {
+      callback(pos.coords.latitude, pos.coords.longitude);
+    });
+  }),
+
+  saveUser: task(function*(name, tagline, lat, lng) {
+    window.localStorage.setItem(
+      'storedUser',
+      JSON.stringify({
+        name: name,
+        tagline: tagline
+      })
+    );
+
+    const user = this.store.createRecord('user', {
+      name: name,
+      tagline: tagline,
+      lat: lat,
+      lng: lng
+    });
+
     this.set('sessionUser', user);
-    // this.startUpdateLocationLoop.perform();
-    this.router.transitionTo('index');
+    yield user.save();
   }),
 
   startUpdateLocationLoop: task(function*() {
