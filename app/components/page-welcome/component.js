@@ -29,7 +29,7 @@ export default Component.extend({
         })
       );
 
-      this.user.checkLocalStorageForAccount();
+      this.user.createAccountFromWelcomeRoute.perform(name, tagline);
     }
   }
 });

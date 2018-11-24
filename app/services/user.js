@@ -9,48 +9,13 @@ export default Service.extend({
   sessionUser: null,
   name: null,
   tagline: null,
-  lat: null,
-  lng: null,
 
-  checkLocalStorageForAccount() {
-    const storedUser = JSON.parse(window.localStorage.getItem('storedUser'));
-    const storedName = storedUser.name;
-    const storedTagline = storedUser.tagline;
-
-    if (
-      !storedUser ||
-      typeof storedUser.name !== 'string' ||
-      typeof storedUser.tagline !== 'string'
-    ) {
-      this.transitionToWelcomePage();
-    } else {
-      this.set('name', storedName);
-      this.set('tagline', storedTagline);
-      this.postUserToApi.perform(storedName, storedTagline);
-    }
-  },
-
-  transitionToWelcomePage() {
-    this.router.replaceWith('welcome');
-  },
-
-  postUserToApi: task(function*(name, tagline) {
-    const callback = (lat, lng) => {
-      this.saveUser.perform(name, tagline, lat, lng);
-      this.startUpdateLocationLoop.perform();
-      this.router.transitionTo('index');
-    };
-
-    yield this.fetchCoords.perform(callback);
+  createAccountFromWelcomeRoute: task(function*(storedName, storedTagline) {
+    yield this.createUser.perform(storedName, storedTagline);
+    yield this.transitionToIndexPage.perform();
   }),
 
-  fetchCoords: task(function*(callback) {
-    yield navigator.geolocation.getCurrentPosition(pos => {
-      callback(pos.coords.latitude, pos.coords.longitude);
-    });
-  }),
-
-  saveUser: task(function*(name, tagline, lat, lng) {
+  createUser: task(function*(name, tagline) {
     window.localStorage.setItem(
       'storedUser',
       JSON.stringify({
@@ -61,26 +26,37 @@ export default Service.extend({
 
     const user = this.store.createRecord('user', {
       name: name,
-      tagline: tagline,
-      lat: lat,
-      lng: lng
+      tagline: tagline
     });
 
     this.set('sessionUser', user);
     yield user.save();
   }),
 
+  transitionToIndexPage: task(function*() {
+    yield this.router.replaceWith('/');
+  }),
+
+  fetchCoords: task(function*(callback) {
+    yield navigator.geolocation.getCurrentPosition(pos => {
+      callback(pos.coords.latitude, pos.coords.longitude);
+    });
+  }),
+
   startUpdateLocationLoop: task(function*() {
     const fiveSeconds = 5 * 1000;
     while (true) {
-      console.log('updating location');
-      this.sessionUser.setProperties({
-        lat: this.lat,
-        lng: this.lng
-      });
+      const callback = (lat, lng) => {
+        this.sessionUser.setProperties({
+          lat: lat,
+          lng: lng
+        });
 
-      yield this.sessionUser.save();
+        this.sessionUser.save();
+      };
+
+      yield this.fetchCoords.perform(callback);
       yield timeout(fiveSeconds);
     }
-  }).restartable()
+  }).keepLatest()
 });

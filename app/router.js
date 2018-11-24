@@ -9,8 +9,14 @@ const Router = EmberRouter.extend({
 
   user: service(),
 
+  onInit: on('init', function() {}),
+
   onEachDidTransition: on('didTransition', function() {
-    this.user.checkLocalStorageForAccount();
+    if (!this.get('user.sessionUser.id')) {
+      this.transitionTo('welcome');
+    } else {
+      this.user.startUpdateLocationLoop.perform();
+    }
   })
 });
 
